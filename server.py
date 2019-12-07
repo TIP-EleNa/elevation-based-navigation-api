@@ -42,7 +42,6 @@ def search():
     waypoints = getWaypoints(G, route)
 
     return jsonify(waypoints)       #it should return A
-    return jsonify('start')
 
 def address_to_geocode(address_list): #find the geocode by address
     geocode_list = []
