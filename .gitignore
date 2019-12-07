@@ -1,4 +1,4 @@
-# General
+# general
 build/
 develop-eggs/
 dist/
@@ -18,5 +18,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Config
+# custom
 config.py
+*.ipynb
+.DS_Store
+__pycache__/config.cpython-36.pyc
