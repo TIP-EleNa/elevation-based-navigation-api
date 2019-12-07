@@ -8,12 +8,17 @@ import geopy.distance
 
 from flask import Flask, render_template, request, jsonify
 from config import GOOGLEMAP_API_KEY
+from flask_cors import CORS, cross_origin
 
 googlemap_cli =googlemaps.Client(key = GOOGLEMAP_API_KEY) #google api key for using google services
 
 app = Flask(__name__) #flask
+app.config['CORS_HEADERS'] = 'Content-Type'
+
+cors = CORS(app, resources={r"/search": {"origins": "http://localhost:5000"}})
 
 @app.route('/search')  #flask, suppose we have url like http://127.0.0.1:5000/search?origin=A&destination=B
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def search():
     origin = request.args.get('origin', type=str)
     dest = request.args.get('destination', type=str)
@@ -23,8 +28,6 @@ def search():
     geo_origin = geocode_list[0]
     geo_dest = geocode_list[1]
     dist = geopy.distance.distance(geo_origin, geo_dest).m
-
-    print(type(geo_origin))
 
     G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
 
