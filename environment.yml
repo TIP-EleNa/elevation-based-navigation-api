@@ -7,7 +7,7 @@ dependencies:
   - googlemaps
   - requests
   - networkx
-  - flask_cors
+  - flask-cors
   - python=3.6
   - anaconda
   - numpy
