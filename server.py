@@ -13,12 +13,9 @@ GOOGLEMAP_API_KEY = os.environ.get('GOOGLEMAP_API_KEY')
 googlemap_cli =googlemaps.Client(key = GOOGLEMAP_API_KEY) #google api key for using google services
 
 app = Flask(__name__) #flask
-app.config.from_pyfile('config.py', silent=True)
-app.config['CORS_HEADERS'] = 'Content-Type'
-CORS(app, headers='Content-Type', resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 @app.route('/search', methods=['POST']) 
-@cross_origin()
 def search():
     req = request.get_json()
     origin = req['origin']
@@ -28,10 +25,13 @@ def search():
 
     geo_origin = geocode_list[0]
     geo_dest = geocode_list[1]
+    
     if len(geo_origin) == 0 or len(geo_dest) == 0: 
         return jsonify('address not found')
-
+    
     dist = geopy.distance.distance(geo_origin, geo_dest).m
+    if dist < 10: 
+        return jsonify([{'x': geo_origin[1], 'y': geo_origin[0]}, {'x': geo_dest[1], 'y':geo_dest[0]}])
 
     G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
 
