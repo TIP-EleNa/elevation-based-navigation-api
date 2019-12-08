@@ -7,26 +7,30 @@ import networkx as nx
 import geopy.distance
 
 from flask import Flask, render_template, request, jsonify
-from config import GOOGLEMAP_API_KEY
 from flask_cors import CORS, cross_origin
 
+GOOGLEMAP_API_KEY = os.environ.get('GOOGLEMAP_API_KEY')
 googlemap_cli =googlemaps.Client(key = GOOGLEMAP_API_KEY) #google api key for using google services
 
 app = Flask(__name__) #flask
+app.config.from_pyfile('config.py', silent=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, headers='Content-Type', resources={r"/*": {"origins": "*"}})
 
-cors = CORS(app, resources={r"/search": {"origins": "http://localhost:5000"}})
-
-@app.route('/search')  #flask, suppose we have url like http://127.0.0.1:5000/search?origin=A&destination=B
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+@app.route('/search', methods=['POST']) 
+@cross_origin()
 def search():
-    origin = request.args.get('origin', type=str)
-    dest = request.args.get('destination', type=str)
+    req = request.get_json()
+    origin = req['origin']
+    dest = req['destination']
 
     geocode_list = address_to_geocode([origin, dest])
 
     geo_origin = geocode_list[0]
     geo_dest = geocode_list[1]
+    if len(geo_origin) == 0 or len(geo_dest) == 0: 
+        return jsonify('address not found')
+
     dist = geopy.distance.distance(geo_origin, geo_dest).m
 
     G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
@@ -48,6 +52,8 @@ def address_to_geocode(address_list): #find the geocode by address
     for address in address_list: 
         geocode = []
         geocode_result = googlemap_cli.geocode(address)
+        if len(geocode_result) == 0: 
+            continue
         lat = geocode_result[0]['geometry']['location']['lat']
         lng = geocode_result[0]['geometry']['location']['lng']
         geocode.append(lat)

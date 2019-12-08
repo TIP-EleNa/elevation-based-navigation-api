@@ -19,7 +19,6 @@ share/python-wheels/
 MANIFEST
 
 # custom
-config.py
 *.ipynb
 .DS_Store
-__pycache__/config.cpython-36.pyc
+__pycache__/
