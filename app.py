@@ -15,43 +15,65 @@ googlemap_cli = googlemaps.Client(key=GOOGLEMAP_API_KEY)  # google api key for u
 app = Flask(__name__)  # flask
 CORS(app)
 
+origin = None
+dest = None
+G = None
+ratio = None
+nearest_origin = None
+nearest_dest = None
+route = None
+ret = None
 
 @app.route('/search', methods=['POST'])
 def search():
+    global origin, dest, G, ratio, nearest_origin, nearest_dest, route, ret
+    
     req = request.get_json()
-    origin = req['origin']
-    dest = req['destination']
-    ratio = req['ratio']
 
-    geocode_list = address_to_geocode([origin, dest])
+    if origin == req['origin'] and dest == req['destination']: 
+        print('same address. use cache')
+        pass
+    else: 
+        print('different addresses')
+        origin = req['origin']
+        dest = req['destination']
 
-    geo_origin = geocode_list[0]
-    geo_dest = geocode_list[1]
+        geocode_list = address_to_geocode([origin, dest])
 
-    if len(geo_origin) == 0 or len(geo_dest) == 0:
-        return jsonify('address not found')
+        geo_origin = geocode_list[0]
+        geo_dest = geocode_list[1]
 
-    dist = geopy.distance.distance(geo_origin, geo_dest).m
-    if dist < 10:
-        return jsonify([{'x': geo_origin[1], 'y': geo_origin[0]}, {'x': geo_dest[1], 'y': geo_dest[0]}])
+        if len(geo_origin) == 0 or len(geo_dest) == 0:
+            return jsonify('address not found')
 
-    G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
+        dist = geopy.distance.distance(geo_origin, geo_dest).m
+        if dist < 10:
+            return jsonify([{'x': geo_origin[1], 'y': geo_origin[0]}, {'x': geo_dest[1], 'y': geo_dest[0]}])
 
-    ox.elevation.add_node_elevations(G, GOOGLEMAP_API_KEY, max_locations_per_batch=350, pause_duration=0.02)
+        G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
 
-    nearest_origin = ox.get_nearest_node(G, geo_origin)
-    nearest_dest = ox.get_nearest_node(G, geo_dest)
+        ox.elevation.add_node_elevations(G, GOOGLEMAP_API_KEY, max_locations_per_batch=350, pause_duration=0.02)
 
-    route = hybrid_path(G, nearest_origin, nearest_dest, ratio)
+        nearest_origin = ox.get_nearest_node(G, geo_origin)
+        nearest_dest = ox.get_nearest_node(G, geo_dest)
 
-    waypoints = getWaypoints(G, route)
-    dist, elev = get_stats(G, route)
+    if ratio == req['ratio']: 
+        print('same ratio. use cache')
+        pass
+    else: 
+        print('different ratio')
+        ratio = req['ratio']
+        route = hybrid_path(G, nearest_origin, nearest_dest, ratio)
 
-    ret = {
-        'waypoints': waypoints,
-        'route_distance': dist,
-        'route_elevation': elev
-    }
+        waypoints = getWaypoints(G, route)
+        dist, elev = get_stats(G, route)
+
+        ret = {
+            'waypoints': waypoints,
+            'route_distance': dist,
+            'route_elevation': elev
+        }
+
     return jsonify(ret)
 
 

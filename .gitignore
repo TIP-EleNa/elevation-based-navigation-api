@@ -22,3 +22,4 @@ MANIFEST
 *.ipynb
 .DS_Store
 __pycache__/
+config.sh
