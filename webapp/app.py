@@ -2,7 +2,6 @@ import googlemaps
 import requests
 import os
 import osmnx as ox
-import numpy as np
 import networkx as nx
 import geopy.distance
 
@@ -10,7 +9,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
 
 GOOGLEMAP_API_KEY = os.environ.get('GOOGLEMAP_API_KEY')
-googlemap_cli = googlemaps.Client(key=GOOGLEMAP_API_KEY)  # google api key for using google services
+googlemap_cli = googlemaps.Client(key=GOOGLEMAP_API_KEY) # google api key for using google services
 
 app = Flask(__name__)  # flask
 CORS(app)
@@ -31,10 +30,19 @@ def search():
     req = request.get_json()
 
     if origin == req['origin'] and dest == req['destination']: 
-        print('same address. use cache')
-        pass
+        if ratio != req['ratio']: 
+            ratio = req['ratio']
+            route = hybrid_path(G, nearest_origin, nearest_dest, ratio)
+
+            waypoints = getWaypoints(G, route)
+            dist, elev = get_stats(G, route)
+
+            ret = {
+                'waypoints': waypoints,
+                'route_distance': dist * 68.703,
+                'route_elevation': elev * 3.281
+            }
     else: 
-        print('different addresses')
         origin = req['origin']
         dest = req['destination']
 
@@ -57,11 +65,6 @@ def search():
         nearest_origin = ox.get_nearest_node(G, geo_origin)
         nearest_dest = ox.get_nearest_node(G, geo_dest)
 
-    if ratio == req['ratio']: 
-        print('same ratio. use cache')
-        pass
-    else: 
-        print('different ratio')
         ratio = req['ratio']
         route = hybrid_path(G, nearest_origin, nearest_dest, ratio)
 
@@ -77,7 +80,7 @@ def search():
     return jsonify(ret)
 
 
-def hybrid_path(G, node_a, node_b, ratio, elev_mult=4):
+def hybrid_path(G, node_a, node_b, ratio, elev_mult=0.005):
     def score(id_a, id_b, edge_data):
         a = G.nodes[id_a]
         b = G.nodes[id_b]
@@ -107,8 +110,6 @@ def get_stats(G, route):
     return dist, elev
 
 
-
-
 def address_to_geocode(address_list):  # find the geocode by address
     geocode_list = []
     for address in address_list:
@@ -132,5 +133,5 @@ def getWaypoints(G, route):
     return waypoints
 
 
-if __name__ == "__main__":  # flask
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
