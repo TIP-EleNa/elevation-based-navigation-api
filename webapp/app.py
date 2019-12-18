@@ -39,8 +39,8 @@ def search():
 
             ret = {
                 'waypoints': waypoints,
-                'route_distance': dist * 68.703,
-                'route_elevation': elev * 3.281
+                'route_distance': dist,
+                'route_elevation': elev
             }
     else: 
         origin = req['origin']
@@ -107,6 +107,8 @@ def get_stats(G, route):
             dist += d
             elev += e
         last_id = curr_id
+    dist *= 68.703 # to miles
+    elev *= 3.281 # to feet
     return dist, elev
 
 
