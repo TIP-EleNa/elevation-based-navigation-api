@@ -55,7 +55,7 @@ def search():
             return jsonify('address not found')
 
         dist = geopy.distance.distance(geo_origin, geo_dest).m
-        if dist < 10:
+        if dist == 0 or dist > 10000:
             return jsonify([{'x': geo_origin[1], 'y': geo_origin[0]}, {'x': geo_dest[1], 'y': geo_dest[0]}])
 
         G = ox.graph_from_point(geo_origin, distance=dist, network_type='walk')
@@ -74,7 +74,8 @@ def search():
         ret = {
             'waypoints': waypoints,
             'route_distance': dist,
-            'route_elevation': elev
+            'route_elevation': elev, 
+            'message': 'ok'
         }
 
     return jsonify(ret)
