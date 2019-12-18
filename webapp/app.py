@@ -74,8 +74,7 @@ def search():
         ret = {
             'waypoints': waypoints,
             'route_distance': dist,
-            'route_elevation': elev, 
-            'message': 'ok'
+            'route_elevation': elev
         }
 
     return jsonify(ret)
