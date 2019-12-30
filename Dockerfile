@@ -12,7 +12,7 @@ WORKDIR /opt/webapp
 
 RUN conda update -n base -c defaults conda
 
-RUN conda create -n elena-api python=3.8 gunicorn flask numpy networkx flask-cors
+RUN conda create -n elena-api python=3.8 gunicorn flask numpy networkx
 
 RUN conda install -n elena-api -c conda-forge googlemaps osmnx
 
